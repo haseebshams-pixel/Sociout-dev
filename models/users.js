@@ -32,14 +32,21 @@ const userSchema = new mongoose.Schema({
   phonenumber: {
     type: String,
     required: true,
-    minLength: 11,
     maxLength: 11,
   },
   DOB: {
-    type: String,
+    type: Date,
     required: true,
-    minLength: 10,
-    maxLength: 10,
+  },
+  avatar: {
+    type: String,
+    required: false,
+    Default: null,
+  },
+  bio: {
+    type: String,
+    required: false,
+    Default: null,
   },
 });
 
@@ -57,6 +64,7 @@ function validateUser(user) {
     password: Joi.string().min(5).max(255).required(),
     phonenumber: Joi.string().min(11).max(11),
     DOB: Joi.string().min(10).max(10),
+    bio: Joi.string().min(0).max(255),
   });
   return schema.validate(user);
 }
