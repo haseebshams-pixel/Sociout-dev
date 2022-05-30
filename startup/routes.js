@@ -9,7 +9,7 @@ const friend = require("../routes/friends");
 const search = require("../routes/search");
 
 module.exports = function (app) {
-  app.use(express.json());
+  app.use(express.json({ limit: "100mb" }));
   app.use(morgan("tiny"));
   app.use("/api/users", user);
   app.use("/api/posts", post);

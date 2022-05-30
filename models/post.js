@@ -20,6 +20,11 @@ const PostSchema = new mongoose.Schema({
     required: true,
     Default: Date.now,
   },
+  likeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Like",
+    required: false,
+  },
 });
 
 const Post = mongoose.model("Post", PostSchema);
