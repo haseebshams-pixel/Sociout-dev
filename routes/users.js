@@ -11,7 +11,13 @@ const otpGenerator = require("otp-generator");
 
 const { Friend } = require("../models/friend");
 const { Otp } = require("../models/otp");
-const { User, validate, validateCreds } = require("../models/users");
+const {
+  User,
+  validate,
+  validateCreds,
+  validateEditUser,
+  validateUserPassword,
+} = require("../models/users");
 
 router.post("/signup", async (req, res, next) => {
   try {
@@ -60,8 +66,7 @@ router.post("/signin", async (req, res, next) => {
     if (!user) return res.status(400).send("User Doesn't Exists");
 
     validPassword = await bcrypt.compare(req.body.password, user.password);
-    if (!validPassword)
-      return res.status(400).send("Invalid email or password");
+    if (!validPassword) return res.status(400).send("Invalid Password");
 
     const token = {
       token: user.generateAuthToken(),
@@ -181,6 +186,8 @@ router.get("/:id", async (req, res) => {
       "email",
       "DOB",
       "phonenumber",
+      "avatar",
+      "bio",
     ]);
     res.send(user);
   } catch (err) {
@@ -272,6 +279,119 @@ router.put("/set-pass", async (req, res) => {
     );
 
     return res.status(200).send("Password updated successfully!");
+  } catch (err) {
+    console.log("Something Went Wrong!: ", err);
+    res.status(500).send(err.message);
+  }
+});
+
+router.put("/change_profile", auth, async (req, res) => {
+  try {
+    let user = await User.findById(req.user._id);
+    if (!user) return res.status(400).send("Can't find User!");
+    user = await User.findByIdAndUpdate(
+      user.id,
+      {
+        $set: {
+          avatar: req.body.avatar,
+        },
+      },
+      { new: true }
+    );
+
+    res.send(
+      _.pick(user, [
+        "id",
+        "firstname",
+        "lastname",
+        "email",
+        "DOB",
+        "phonenumber",
+        "avatar",
+        "bio",
+      ])
+    );
+  } catch (err) {
+    console.log("Something Went Wrong!: ", err);
+    res.status(500).send(err.message);
+  }
+});
+
+router.put("/edit", auth, async (req, res) => {
+  try {
+    const { error } = validateEditUser(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+    let user = await User.findById(req.user._id);
+    if (!user) return res.status(400).send("Can't find User!");
+    user = await User.findByIdAndUpdate(
+      user.id,
+      {
+        $set: {
+          firstname: req.body.firstname,
+          lastname: req.body.lastname,
+          phonenumber: req.body.phonenumber,
+          bio: req?.body?.bio ? req?.body?.bio : "",
+          DOB: req.body.DOB,
+        },
+      },
+      { new: true }
+    );
+
+    res.send(
+      _.pick(user, [
+        "id",
+        "firstname",
+        "lastname",
+        "email",
+        "DOB",
+        "phonenumber",
+        "avatar",
+        "bio",
+      ])
+    );
+  } catch (err) {
+    console.log("Something Went Wrong!: ", err);
+    res.status(500).send(err.message);
+  }
+});
+
+router.put("/change_password", auth, async (req, res) => {
+  try {
+    const { error } = validateUserPassword(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+    let user = await User.findById(req.user._id);
+    if (!user) return res.status(400).send("Can't find User!");
+    let validPassword = await bcrypt.compare(
+      req.body.oldpassword,
+      user.password
+    );
+    if (!validPassword) return res.status(400).send("Invalid Password");
+
+    const salt = await bcrypt.genSalt(10);
+    let encryptedPass = await bcrypt.hash(req.body.newpassword, salt);
+
+    user = await User.findByIdAndUpdate(
+      user.id,
+      {
+        $set: {
+          password: encryptedPass,
+        },
+      },
+      { new: true }
+    );
+
+    res.send(
+      _.pick(user, [
+        "id",
+        "firstname",
+        "lastname",
+        "email",
+        "DOB",
+        "phonenumber",
+        "avatar",
+        "bio",
+      ])
+    );
   } catch (err) {
     console.log("Something Went Wrong!: ", err);
     res.status(500).send(err.message);
