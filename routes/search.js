@@ -2,7 +2,6 @@ var express = require("express");
 var router = express.Router();
 
 const _ = require("lodash");
-const auth = require("../middleware/auth");
 
 const { User } = require("../models/users");
 

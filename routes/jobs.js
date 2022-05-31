@@ -5,26 +5,13 @@ const _ = require("lodash");
 const auth = require("../middleware/auth");
 
 const { User } = require("../models/users");
-const { Post, validate } = require("../models/post");
-const { Like } = require("../models/like");
-
-router.get("/user/:id", async (req, res) => {
-  try {
-    let postedByuser = await Post.find({
-      postedBy: req.params.id,
-    }).sort("-date");
-    res.send(postedByuser);
-  } catch (err) {
-    console.log(err.message);
-    res.status(500).send(err.message);
-  }
-});
+const { Job, validate } = require("../models/jobs");
 
 router.get("/:id", async (req, res) => {
   try {
-    let post = await Post.findById(req.params.id);
-    if (!post) return res.status(400).send("Can't find Post!");
-    res.send(post);
+    let job = await Job.findById(req.params.id);
+    if (!job) return res.status(400).send("Can't find Job!");
+    res.send(job);
   } catch (err) {
     console.log(err.message);
     res.status(500).send(err.message);
@@ -41,23 +28,30 @@ router.post("/", auth, async (req, res) => {
     req.body.postedBy = req.user._id;
 
     const { error } = validate(
-      _.pick(req.body, ["text", "images", "postedBy", "date"])
+      _.pick(req.body, [
+        "title",
+        "companyName",
+        "employmentType",
+        "location",
+        "email",
+        "description",
+        "postedBy",
+        "date",
+      ])
     );
     if (error) return res.status(400).send(error.details[0].message);
-    let post = new Post({
-      text: req.body.text,
-      images: req.body.photos,
+    let job = new Job({
+      title: req.body.title,
+      companyName: req.body.companyName,
+      employmentType: req.body.employmentType,
+      location: req.body.location,
+      email: req.body.email,
+      description: req.body.description,
       postedBy: req.body.postedBy,
       date: new Date(),
     });
-    let like = new Like({
-      post: post.id,
-      likedBy: [],
-    });
-    post.likeId = like.id;
-    like.save();
-    post = await post.save();
-    res.send(post);
+    job = await job.save();
+    res.send(job);
   } catch (err) {
     console.log(err.message);
     res.status(500).send(err.message);
@@ -66,10 +60,10 @@ router.post("/", auth, async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    let posts = await Post.find({}).sort("-date");
-    if (!posts) return res.status(404).send("Can't find Posts!");
+    let jobs = await Job.find({}).sort("-date");
+    if (!jobs) return res.status(404).send("Can't find Jobs!");
 
-    res.send(posts);
+    res.send(jobs);
   } catch (err) {
     console.log(err.message);
     res.status(500).send(err.message);
@@ -82,12 +76,10 @@ router.get("/skiping/:skip", async (req, res) => {
       req.params.skip && /^\d+$/.test(req.params.skip)
         ? Number(req.params.skip)
         : 0;
-    let posts = await Post.find({}, undefined, { skip, limit: 2 }).sort(
-      "-date"
-    );
-    if (!posts) return res.status(404).send("Can't find Posts!");
+    let jobs = await Job.find({}, undefined, { skip, limit: 4 }).sort("-date");
+    if (!jobs) return res.status(404).send("Can't find Jobs!");
 
-    res.send(posts);
+    res.send(jobs);
   } catch (err) {
     console.log(err.message);
     res.status(500).send(err.message);
@@ -102,29 +94,40 @@ router.put("/:id", auth, async (req, res) => {
     if (!user) return res.status(400).send("Can't find User!");
 
     const { error } = validate(
-      _.pick(req.body, ["text", "images", "postedBy", "date"])
+      _.pick(req.body, [
+        "title",
+        "companyName",
+        "employmentType",
+        "location",
+        "email",
+        "description",
+        "postedBy",
+        "date",
+      ])
     );
     if (error) return res.status(400).send(error.details[0].message);
-
-    let post = await Post.findById(req.params.id);
-    if (!post) return res.status(400).send("Post not found!");
-
-    if (post.postedBy.toString() !== user.id)
+    let job = await Job.findById(req.params.id);
+    if (!job) return res.status(400).send("Job not found!");
+    if (job.postedBy.toString() !== user.id)
       return res.status(400).send("You don't have permission to do that.");
 
-    post = await Post.findByIdAndUpdate(
-      post.id,
+    job = await Job.findByIdAndUpdate(
+      job.id,
       {
         $set: {
-          text: req.body.text,
-          images: req.body.photos,
+          title: req.body.title,
+          companyName: req.body.companyName,
+          employmentType: req.body.employmentType,
+          location: req.body.location,
+          email: req.body.email,
+          description: req.body.description,
           postedBy: req.body.postedBy,
           date: new Date(),
         },
       },
       { new: true }
     );
-    res.send(post);
+    res.send(job);
   } catch (err) {
     console.log(err.message);
     res.status(500).send(err.message);
@@ -136,23 +139,15 @@ router.delete("/:id", auth, async (req, res, next) => {
     const token = req.header("x-auth-token");
     let user = await User.findById(req.user._id);
     if (!user) return res.status(400).send("Can't find User!");
-    let post = await Post.findById(req.params.id);
-    if (!post) return res.status(400).send("Post not found!");
-    if (post.postedBy.toString() !== user.id)
+    let job = await Job.findById(req.params.id);
+    if (!job) return res.status(400).send("Job not found!");
+    if (job.postedBy.toString() !== user.id)
       return res.status(400).send("You don't have permission to do that.");
-
-    Like.findByIdAndRemove(post.likeId, function (err) {
+    Job.findByIdAndRemove(job.id, function (err) {
       if (err) {
         console.log(err);
       }
     });
-
-    Post.findByIdAndRemove(post.id, function (err) {
-      if (err) {
-        console.log(err);
-      }
-    });
-
     res.status(200).send();
   } catch (err) {
     console.log(err.message);

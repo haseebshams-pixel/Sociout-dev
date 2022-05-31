@@ -5,7 +5,6 @@ var cors = require("cors");
 
 app.use(cors({ exposedHeaders: "Authorization" }));
 
-require("./startup/publicFolders")(app);
 require("./startup/dotenv")();
 require("./startup/routes")(app);
 require("./startup/db")();

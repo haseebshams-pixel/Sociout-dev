@@ -38,17 +38,7 @@ function validatePost(obj) {
   });
   return schema.validate(obj);
 }
-function validateEditedPost(obj) {
-  const schema = Joi.object({
-    text: Joi.string().min(0).max(255),
-    images: Joi.string(),
-    removedImages: Joi.string(),
-    postedBy: Joi.objectId().required(),
-  });
-  return schema.validate(obj);
-}
 
 module.exports.Post = Post;
 module.exports.PostSchema = PostSchema;
 module.exports.validate = validatePost;
-module.exports.validateEdit = validateEditedPost;

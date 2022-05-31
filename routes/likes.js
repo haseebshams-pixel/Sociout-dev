@@ -8,17 +8,19 @@ const { User } = require("../models/users");
 const { Post } = require("../models/post");
 const { Like } = require("../models/like");
 
-router.get("/like/:id", auth, async (req, res) => {
+router.post("/like", auth, async (req, res) => {
   try {
     let user = await User.findById(req.user._id);
     if (!user) return res.status(400).send("Can't find User!");
 
-    let post = await Post.findById(req.params.id);
+    let post = await Post.findById(req.body.id);
     if (!post) return res.status(400).send("Post not found!");
 
-    let like = await Like.findByIdAndUpdate(post._id, {
+    let like = await Like.findOne({ post: post._id });
+
+    like = await Like.findByIdAndUpdate(like._id, {
       $addToSet: {
-        likedBy: req.user._id,
+        likedBy: user.id,
       },
     });
 
