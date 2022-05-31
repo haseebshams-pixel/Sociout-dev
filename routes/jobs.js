@@ -92,7 +92,7 @@ router.put("/:id", auth, async (req, res) => {
 
     let user = await User.findById(req.user._id);
     if (!user) return res.status(400).send("Can't find User!");
-
+    req.body.postedBy = req.user._id;
     const { error } = validate(
       _.pick(req.body, [
         "title",
