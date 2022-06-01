@@ -225,7 +225,6 @@ router.post("/forgot_pass/:email", async (req, res) => {
     });
     otpEntry.save();
 
-    let resetLink = "localhost:3000/verify-otp>Verify-OTP";
     const data = {
       from: "socioutofficial@outlook.com",
       to: email,
@@ -233,8 +232,7 @@ router.post("/forgot_pass/:email", async (req, res) => {
       html: `<h1>Please Find Your Forget Password OTP</h1>
             <h1>${otp.toString()}</h1>
             <h2> Do not share this OTP with anyone</h2>
-            <p> Click on this link to Continue
-            <a href=${resetLink}</p>`,
+           `,
     };
 
     var transporter = nodemailer.createTransport({

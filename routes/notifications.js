@@ -14,7 +14,7 @@ router.get("/", auth, async (req, res) => {
 
     let notifications = await Notification.find({
       receiver: req.user._id,
-    });
+    }).sort("-date");
 
     res.send(notifications);
   } catch (err) {
