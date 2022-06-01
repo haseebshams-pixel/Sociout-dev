@@ -49,7 +49,19 @@ router.post("/signup", async (req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(user.password, salt);
     await user.save();
-    const obj = { token: user.generateAuthToken(), user: user };
+    const obj = {
+      token: user.generateAuthToken(),
+      user: _.pick(user, [
+        "id",
+        "firstname",
+        "lastname",
+        "email",
+        "DOB",
+        "phonenumber",
+        "avatar",
+        "bio",
+      ]),
+    };
     res.send(obj);
   } catch (err) {
     console.log(err.message);
