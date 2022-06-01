@@ -7,6 +7,7 @@ const auth = require("../middleware/auth");
 const { User } = require("../models/users");
 const { Friend } = require("../models/friend");
 const { Post } = require("../models/post");
+const { Notification } = require("../models/notifications");
 
 router.get("/check/:id", auth, async (req, res) => {
   try {
@@ -95,6 +96,15 @@ router.get("/confirm/:id/", auth, async (req, res) => {
       }
     );
 
+    let notification = new Notification({
+      text: "accepted your friend request!",
+      sender: currentuser.firstname,
+      receiver: userToAdd.id,
+      date: Date.now(),
+    });
+
+    notification.save();
+
     res.status(200).send({ state: "friended" });
   } catch (err) {
     console.log(err.message);
@@ -122,6 +132,15 @@ router.get("/request/:id", auth, async (req, res) => {
         },
       }
     );
+
+    let notification = new Notification({
+      text: "sent you a friend request!",
+      sender: user.firstname,
+      receiver: userToAdd.id,
+      date: Date.now(),
+    });
+
+    notification.save();
 
     res.status(200).send();
   } catch (err) {
