@@ -7,6 +7,7 @@ const auth = require("../middleware/auth");
 const { User } = require("../models/users");
 const { Post, validate } = require("../models/post");
 const { Like } = require("../models/like");
+const { Comment } = require("../models/comment");
 
 router.get("/user/:id", async (req, res) => {
   try {
@@ -152,6 +153,13 @@ router.delete("/:id", auth, async (req, res, next) => {
         console.log(err);
       }
     });
+    Comment.deleteMany({ post: req.params.id })
+      .then(function () {
+        console.log("Data deleted"); // Success
+      })
+      .catch(function (error) {
+        console.log(error); // Failure
+      });
 
     res.status(200).send();
   } catch (err) {
