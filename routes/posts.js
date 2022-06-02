@@ -236,7 +236,7 @@ router.delete("/share/:id", auth, async (req, res, next) => {
     if (!user) return res.status(400).send("Can't find User!");
     let post = await Post.findById(req.params.id);
     if (!post) return res.status(400).send("Post not found!");
-    if (post.postedBy.toString() !== user.id)
+    if (post.sharedBy.toString() !== user.id)
       return res.status(400).send("You don't have permission to do that.");
     Like.deleteMany({ post: req.params.id })
       .then(function () {
