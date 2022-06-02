@@ -12,7 +12,7 @@ const { Comment } = require("../models/comment");
 router.get("/user/:id", async (req, res) => {
   try {
     let postedByuser = await Post.find({
-      postedBy: req.params.id,
+      $or: [{ postedBy: req.params.id }, { sharedBy: req.params.id }],
     }).sort("-date");
     res.send(postedByuser);
   } catch (err) {
@@ -59,6 +59,40 @@ router.post("/", auth, async (req, res) => {
     like.save();
     post = await post.save();
     res.send(post);
+  } catch (err) {
+    console.log(err.message);
+    res.status(500).send(err.message);
+  }
+});
+
+router.post("/share/", auth, async (req, res) => {
+  try {
+    const token = req.header("x-auth-token");
+
+    let user = await User.findById(req.user._id);
+    if (!user) return res.status(400).send("Can't find User!");
+
+    let postToShare = await Post.findById(req.body.id);
+    if (!postToShare) return res.status(400).send("Post not found!");
+
+    let post = new Post({
+      postId: postToShare._id,
+      text: postToShare.text,
+      images: postToShare.images,
+      postedBy: postToShare.postedBy,
+      date: new Date(),
+      likeId: postToShare.likeId,
+      isShared: true,
+      sharedBy: req.user._id,
+      oldDate: postToShare.date,
+    });
+    let like = new Like({
+      post: post.id,
+      likedBy: [],
+    });
+    like.save();
+    post = await post.save();
+    res.status(200).send(post);
   } catch (err) {
     console.log(err.message);
     res.status(500).send(err.message);
@@ -142,11 +176,75 @@ router.delete("/:id", auth, async (req, res, next) => {
     if (post.postedBy.toString() !== user.id)
       return res.status(400).send("You don't have permission to do that.");
 
+    let postShared = await Post.find({ postId: post._id });
+    if (postShared) {
+      for (let i = 0; i < postShared.length; i++) {
+        Like.deleteMany({ post: postShared[i]._id })
+          .then(function () {
+            console.log("Comments on Shared Posts deleted"); // Success
+          })
+          .catch(function (error) {
+            console.log(error); // Failure
+          });
+        Comment.deleteMany({ post: postShared[i]._id })
+          .then(function () {
+            console.log("Comments on Shared Posts deleted"); // Success
+          })
+          .catch(function (error) {
+            console.log(error); // Failure
+          });
+      }
+
+      Post.deleteMany({ postId: post._id })
+        .then(function () {
+          console.log("Shared Posts deleted"); // Success
+        })
+        .catch(function (error) {
+          console.log(error); // Failure
+        });
+    }
     Like.findByIdAndRemove(post.likeId, function (err) {
       if (err) {
         console.log(err);
       }
     });
+
+    Post.findByIdAndRemove(post.id, function (err) {
+      if (err) {
+        console.log(err);
+      }
+    });
+    Comment.deleteMany({ post: req.params.id })
+      .then(function () {
+        console.log("Comments on Post deleted"); // Success
+      })
+      .catch(function (error) {
+        console.log(error); // Failure
+      });
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.log(err.message);
+    res.status(500).send(err.message);
+  }
+});
+
+router.delete("/share/:id", auth, async (req, res, next) => {
+  try {
+    const token = req.header("x-auth-token");
+    let user = await User.findById(req.user._id);
+    if (!user) return res.status(400).send("Can't find User!");
+    let post = await Post.findById(req.params.id);
+    if (!post) return res.status(400).send("Post not found!");
+    if (post.postedBy.toString() !== user.id)
+      return res.status(400).send("You don't have permission to do that.");
+    Like.deleteMany({ post: req.params.id })
+      .then(function () {
+        console.log("Comments on Shared Posts deleted"); // Success
+      })
+      .catch(function (error) {
+        console.log(error); // Failure
+      });
 
     Post.findByIdAndRemove(post.id, function (err) {
       if (err) {
@@ -161,7 +259,7 @@ router.delete("/:id", auth, async (req, res, next) => {
         console.log(error); // Failure
       });
 
-    res.status(200).send();
+    res.sendStatus(200);
   } catch (err) {
     console.log(err.message);
     res.status(500).send(err.message);

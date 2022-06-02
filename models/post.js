@@ -25,6 +25,25 @@ const PostSchema = new mongoose.Schema({
     ref: "Like",
     required: false,
   },
+  postId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Post",
+    required: false,
+  },
+  isShared: {
+    type: Boolean,
+    required: false,
+  },
+  sharedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: false,
+  },
+  oldDate: {
+    type: Date,
+    required: false,
+    Default: Date.now,
+  },
 });
 
 const Post = mongoose.model("Post", PostSchema);
