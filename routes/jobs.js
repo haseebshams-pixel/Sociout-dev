@@ -76,7 +76,7 @@ router.get("/skiping/:skip", async (req, res) => {
       req.params.skip && /^\d+$/.test(req.params.skip)
         ? Number(req.params.skip)
         : 0;
-    let jobs = await Job.find({}, undefined, { skip, limit: 4 }).sort("-date");
+    let jobs = await Job.find({}, undefined, { skip, limit: 6 }).sort("-date");
     if (!jobs) return res.status(404).send("Can't find Jobs!");
 
     res.send(jobs);

@@ -118,7 +118,7 @@ router.post("/google_auth", async (req, res, next) => {
       let friend = new Friend({
         user: user.id,
         friends: [],
-        pending: [],
+        pending: [], //incoming pending friend requests,
       });
 
       friend.save();
@@ -226,7 +226,7 @@ router.post("/forgot_pass/:email", async (req, res) => {
     otpEntry.save();
 
     const data = {
-      from: "socioutofficial@outlook.com",
+      from: "socioutofficial@gmail.com",
       to: email,
       subject: "Forget Password OTP",
       html: `<h1>Please Find Your Forget Password OTP</h1>
@@ -236,11 +236,11 @@ router.post("/forgot_pass/:email", async (req, res) => {
     };
 
     var transporter = nodemailer.createTransport({
-      service: "outlook",
+      service: "gmail",
       port: 587,
       auth: {
-        user: "socioutofficial@outlook.com",
-        pass: "noobassbitch9999",
+        user: "socioutofficial@gmail.com",
+        pass: "lpdmekkyaobovczq",
       },
     });
 
@@ -274,6 +274,8 @@ router.post("/verify-otp", async (req, res) => {
 
 router.put("/set-pass", async (req, res) => {
   try {
+    const { error } = validateCreds(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
     let email = req.body.email;
     let password = req.body.password;
 
