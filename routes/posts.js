@@ -14,18 +14,11 @@ router.get("/user/:id", async (req, res) => {
     let postedByuser = await Post.find({
       $or: [
         { $and: [{ postedBy: req.params.id }, { isShared: false }] },
-        // {
-        //   $and: [
-        //     { sharedBy: req.params.id },
-        //     { postedBy: { $not: req.params.id } },
-        //   ],
-        // },
+        {
+          sharedBy: req.params.id,
+        },
       ],
     }).sort("-date");
-
-    // let postedByuser = await Post.find({
-    //   $or: [{ postedBy: req.params.id }],
-    // }).sort("-date");
 
     res.send(postedByuser);
   } catch (err) {
