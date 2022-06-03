@@ -33,6 +33,7 @@ const PostSchema = new mongoose.Schema({
   isShared: {
     type: Boolean,
     required: false,
+    default: false,
   },
   sharedBy: {
     type: mongoose.Schema.Types.ObjectId,

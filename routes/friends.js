@@ -229,24 +229,4 @@ router.get("/user/:id", async (req, res) => {
   }
 });
 
-// posts done by the friends and the person himself.
-router.get("/posts", auth, async (req, res) => {
-  try {
-    let user = await User.findById(req.user._id);
-    if (!user) return res.status(400).send("Can't find User!");
-
-    let friendObj = await Friend.findOne({ user: user._id });
-    friendObj.friends.push(user._id);
-
-    let arrayofposts = await Post.find({
-      postedBy: { $in: friendObj.friends },
-    }).sort("-date");
-
-    res.send(arrayofposts);
-  } catch (err) {
-    console.log(err.message);
-    res.status(500).send(err.message);
-  }
-});
-
 module.exports = router;
